@@ -1,0 +1,31 @@
+/*
+ * @NOTE: Prepend a `~` to css file paths that are in your node_modules
+ *        See https://github.com/webpack-contrib/sass-loader#imports
+ */
+
+body {
+  height: 100vh;
+  margin: 0;
+}
+
+#root {
+  height: 100%;
+}
+
+.table td.fit, 
+.table th.fit {
+    white-space: nowrap;
+    width: 1%;
+}
+
+.table tr td .show-hover{
+  display: none;
+}
+
+.table tr:hover td .show-hover{
+  display: inline-block;
+}
+
+a {
+  cursor: pointer;
+}

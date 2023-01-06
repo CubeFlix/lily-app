@@ -1,7 +1,7 @@
 import Table from 'react-bootstrap/Table';
 import Container from 'react-bootstrap/Container';
 import { useState, useEffect } from 'react';
-import { AiOutlineCloudServer, AiOutlineEdit, AiOutlineDelete, AiOutlineDownload } from 'react-icons/ai';
+import { AiOutlineCloudServer, AiOutlineDownload } from 'react-icons/ai';
 import ErrorModal from './ErrorModal';
 
 export default function Home( { name, username, setLoggedIn } ) {
@@ -49,8 +49,6 @@ export default function Home( { name, username, setLoggedIn } ) {
             <td><a href={`#/drive/${name}?path=/`}>{name}</a></td>
             <td style={{textAlign: 'right'}}>
               <div className='show-hover'>
-              <a><AiOutlineEdit/></a>
-              <a><AiOutlineDelete/></a>
               <a onClick={() => downloadDrive(name)}><AiOutlineDownload/></a>
               </div>
             </td>

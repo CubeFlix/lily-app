@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { useParams, redirect } from "react-router-dom";
 import useQuery from "./useQuery";
 import { AiOutlineFile, AiOutlineFolder, AiOutlineArrowUp, AiOutlineEdit, AiOutlineDelete, AiOutlineDownload } from "react-icons/ai";
+import { MdDriveFileMoveOutline } from "react-icons/md";
 import * as pathlib from "path-browserify";
 import ErrorModal from "./ErrorModal";
 
@@ -28,6 +29,14 @@ export default function Drive( { username, setLoggedIn } ) {
     const [fileToRename, setFileToRename] = useState('');
     const [toRenameFile, setToRenameFile] = useState(true);
     const [newName, setNewName] = useState('');
+
+    const [showMoveModal, setShowMoveModal] = useState(false);
+    const [fileToMove, setFileToMove] = useState('');
+    const [toMoveFile, setToMoveFile] = useState(true);
+    const [newLocation, setNewLocation] = useState('');
+
+    const [showCreateDirModal, setShowCreateDirModal] = useState(false);
+    const [dirToCreate, setDirToCreate] = useState('');
 
     const [showErrorModal, setShowErrorModal] = useState(false);
     const [errorText, setErrorText] = useState('');
@@ -61,6 +70,7 @@ export default function Drive( { username, setLoggedIn } ) {
                       setLoggedIn(false);
                     } else {
                       alertError(resp.error);
+                      window.location = `#/drive/${params.driveName}?path=${pathlib.dirname(path)}`;
                     }
                   } else {
                     setDir(resp.resp.data.list);
@@ -114,6 +124,15 @@ export default function Drive( { username, setLoggedIn } ) {
       getDir();
     }
 
+    const uploadPath = async function(path) {
+      const status = await window.api.uploadPath(params.driveName, path);
+      if (!status.ok) {
+        // TODO: error
+        alertError(status.error);
+      }
+      getDir();
+    }
+
     useEffect(getDir, [path]);
 
     return <><Container style={{marginTop: '20px'}}>
@@ -124,7 +143,8 @@ export default function Drive( { username, setLoggedIn } ) {
             <Button style={{marginRight: '10px'}} variant="secondary" href={`#/drive/${params.driveName}?path=${pathlib.dirname(path)}`}><AiOutlineArrowUp/> Previous Directory</Button>}
         {!isFile ? <Button style={{marginRight: '10px'}} onClick={() => downloadPath(path)}>Download Folder</Button> : <Button style={{marginRight: '10px'}} onClick={() => download(path)}>Download</Button>}
         {!isFile ? <Button style={{marginRight: '10px'}} onClick={() => upload(path)}>Upload</Button> : null}
-        {!isFile ? <Button style={{marginRight: '10px'}}>Upload Folder</Button> : null}
+        {!isFile ? <Button style={{marginRight: '10px'}} onClick={() => uploadPath(path)}>Upload Folder</Button> : null}
+        {!isFile ? <Button style={{marginRight: '10px'}} onClick={() => {setShowCreateDirModal(true); setDirToCreate('')}}>Create Folder</Button> : null}
         <Button onClick={() => getDir()}>Refresh</Button>
         </div>
         {!isFile ? 
@@ -146,6 +166,16 @@ export default function Drive( { username, setLoggedIn } ) {
                   setToRenameFile(false);
                 }
                 }}><AiOutlineEdit/></a>
+                <a onClick={() => {
+                setShowMoveModal(true);
+                setFileToMove(pathlib.join(path, item.name));
+                setNewLocation(pathlib.join(path, item.name));
+                if (item.isfile) {
+                  setToMoveFile(true);
+                } else {
+                  setToMoveFile(false);
+                }
+                }}><MdDriveFileMoveOutline/></a>
               <a onClick={item.isfile ? () => deleteFile(pathlib.join(path, item.name)) : () => deleteDir(pathlib.join(path, item.name))}><AiOutlineDelete/></a>
               {item.isfile ? <a onClick={() => download(pathlib.join(path, item.name))}><AiOutlineDownload/></a> : <a onClick={() => downloadPath(pathlib.join(path, item.name))}><AiOutlineDownload/></a>}
               </div>
@@ -160,7 +190,7 @@ export default function Drive( { username, setLoggedIn } ) {
         <Modal.Header closeButton>
           <Modal.Title>Rename {fileToRename}</Modal.Title>
         </Modal.Header>
-        <Form.Control type="email" placeholder="New name" defaultValue={pathlib.basename(fileToRename)} onChange={(e) => setNewName(e.target.value)}/>
+        <Form.Control type="text" placeholder="New name" defaultValue={pathlib.basename(fileToRename)} onChange={(e) => setNewName(e.target.value)}/>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => {
             setShowRenameModal(false);
@@ -185,7 +215,69 @@ export default function Drive( { username, setLoggedIn } ) {
               getDir();
             }
           }}>
-            Save Changes
+            Rename
+          </Button>
+        </Modal.Footer>
+      </Modal>
+      <Modal show={showMoveModal} onHide={() => {
+            setShowMoveModal(false);
+          }}>
+        <Modal.Header closeButton>
+          <Modal.Title>Move {fileToMove}</Modal.Title>
+        </Modal.Header>
+        <Form.Control type="text" placeholder="New location" defaultValue={fileToMove} onChange={(e) => setNewLocation(e.target.value)}/>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => {
+            setShowMoveModal(false);
+          }}>
+            Close
+          </Button>
+          <Button variant="primary" onClick={async () => {
+            setShowMoveModal(false);
+            if (toMoveFile) {
+              const status = await window.api.command('movefiles', {drive: params.driveName, paths: [fileToMove], dests: [newLocation]});
+              if (!status.ok) {
+                // TODO: error
+                alertError(status.error);
+              }
+              getDir();
+            } else {
+              console.log({drive: params.driveName, paths: [fileToMove], dests: [newLocation]});
+              const status = await window.api.command('movedirs', {drive: params.driveName, paths: [fileToMove], dests: [newLocation]});
+              if (!status.ok) {
+                // TODO: error
+                alertError(status.error);
+              }
+              getDir();
+            }
+          }}>
+            Move
+          </Button>
+        </Modal.Footer>
+      </Modal>
+      <Modal show={showCreateDirModal} onHide={() => {
+            setShowCreateDirModal(false);
+          }}>
+        <Modal.Header closeButton>
+          <Modal.Title>Create folder</Modal.Title>
+        </Modal.Header>
+        <Form.Control type="text" placeholder="New name" required onChange={(e) => setDirToCreate(e.target.value)}/>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => {
+            setShowCreateDirModal(false);
+          }}>
+            Close
+          </Button>
+          <Button variant="primary" onClick={async () => {
+            setShowCreateDirModal(false);
+              const status = await window.api.command('createdirs', {drive: params.driveName, paths: [pathlib.join(path, dirToCreate)]});
+              if (!status.ok) {
+                // TODO: error
+                alertError(status.error);
+              }
+              getDir();
+          }}>
+            Create
           </Button>
         </Modal.Footer>
       </Modal>

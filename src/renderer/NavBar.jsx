@@ -11,7 +11,6 @@ export default function NavBar( { name, username, handleLogout, handleLogoutAndD
         <Navbar.Collapse id="responsive-navbar-nav">
           <Nav className="me-auto">
             <Nav.Link href="#/">Drives</Nav.Link>
-            <Nav.Link href="#/admin">Admin</Nav.Link>
           </Nav>
           <Nav>
             <NavDropdown title={username} id="collasible-nav-dropdown" align={{ lg: 'end' }}>

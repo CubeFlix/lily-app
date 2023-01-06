@@ -33,5 +33,6 @@ contextBridge.exposeInMainWorld('api', {
     {name: name, args: args}),
   download: (drive: string, path: string) => ipcRenderer.invoke('api-download', {drive: drive, path: path}),
   downloadPath: (drive: string, path: string) => ipcRenderer.invoke('api-download-path', {drive: drive, path: path}),
-  upload: (drive: string, path: string) => ipcRenderer.invoke('api-upload', {drive: drive, path: path})
+  upload: (drive: string, path: string) => ipcRenderer.invoke('api-upload', {drive: drive, path: path}),
+  uploadPath: (drive: string, path: string) => ipcRenderer.invoke('api-upload-folder', {drive: drive, path: path})
 });

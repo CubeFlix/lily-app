@@ -21,6 +21,7 @@ declare global {
       download(drive: string, path: string): Promise<any>;
       downloadPath(drive: string, path: string): Promise<any>;
       upload(drive: string, path: string): Promise<any>;
+      uploadPath(drive: string, path: string): Promise<any>
     }
   }
 }

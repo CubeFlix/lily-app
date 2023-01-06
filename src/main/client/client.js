@@ -179,16 +179,19 @@ export class Client {
     }
 
     upload(auth, drive, path, content, chunkSize=4096, settings=null) {
-        if (settings != null) {
-            this.requestNoChunks(new Request("createfiles", auth, {drive: drive, paths: [path], settings: settings}));
-        } else {
-            this.requestNoChunks(new Request("createfiles", auth, {drive: drive, paths: [path]}));
-        }
         const host = this.host;
         const port = this.port;
         const tlsOptions = this.tlsOptions;
+        const me = this;
         const request = new Request("writefiles", auth, {drive: drive, paths: [path], clear: [true]});
         return new Promise(function(resolve, reject) {
+            var promise = null;
+            if (settings != null) {
+                promise = me.requestNoChunks(new Request("createfiles", auth, {drive: drive, paths: [path], settings: settings}));
+            } else {
+                promise = me.requestNoChunks(new Request("createfiles", auth, {drive: drive, paths: [path]}));
+            }
+            promise.then(() => {
             var client = tls.connect(port, host, tlsOptions, function() {
                 // Calculate the chunks.
                 const numChunks = Math.ceil(content.length / chunkSize);
@@ -271,7 +274,7 @@ export class Client {
             client.on('error', function(ex) {
                 reject(ex);
                 return;
-            });
+            });});
         });
     }
 }

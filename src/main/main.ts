@@ -112,8 +112,8 @@ const createWindow = async () => {
     mainWindow = null;
   });
 
-  const menuBuilder = new MenuBuilder(mainWindow);
-  menuBuilder.buildMenu();
+  // const menuBuilder = new MenuBuilder(mainWindow);
+  // menuBuilder.buildMenu();
 
   // Open urls in the user's browser
   mainWindow.webContents.setWindowOpenHandler((edata) => {
@@ -331,6 +331,40 @@ app
       }
     }
 
+    const uploadPath = async function(drive: string, folderPath: string, savePath: string) {
+      if (!connected || !loggedIn) {return {ok: false, error: "not logged in"}};
+      try {
+        const children = fs.readdirSync(folderPath);
+        // Upload each item individually.
+        for (let i = 0; i < children.length; i++) {
+          let elem = children[i];
+          if (fs.statSync(path.join(folderPath, elem)).isFile()) {
+            const status = await uploadFile(drive, path.join(folderPath, elem), path.join(savePath, elem));
+            if (!status.ok) {
+              return status
+            }
+          } else {
+            const resp = await globalClient.requestNoChunks(new Request('createdirs', globalSession, {drive: drive, paths: [path.join(savePath, elem)]}));
+            if (resp.code != 0) {
+              if (resp.code == 6) {
+                globalSession = null;
+                loggedIn = false;
+                return {ok: false, error: "Session expired."};
+              }
+              return {ok: false, error: resp.code.toString() + " " + resp.str};
+            }
+            const status: any = await uploadPath(drive, path.join(folderPath, elem), path.join(savePath, elem));
+            if (!status.ok) {
+              return status;
+            }
+          }
+        }
+        return {ok: true};
+      } catch (err: any) {
+        return {ok: false, error: err};
+      }
+    }
+
     ipcMain.handle('api-download-path', async (event, arg) => {
       if (!connected || !loggedIn) {return {ok: false, error: "not logged in"}};
       try {
@@ -364,6 +398,23 @@ app
               throw status.error;
             }
           }
+        }
+        return {ok: true};
+      } catch (err) {
+        return {ok: false, error: err};
+      }
+    });
+
+    ipcMain.handle('api-upload-folder', async (event, arg) => {
+      if (!connected || !loggedIn) {return {ok: false, error: "not logged in"}};
+      try {
+        const file = await dialog.showOpenDialog({
+          title: 'Upload Folder',
+          buttonLabel: 'Upload',
+          properties: ['openDirectory']});
+        if (!file.canceled && file.filePaths !== undefined && file.filePaths.length == 1) {
+            const status = await uploadPath(arg.drive, file.filePaths[0].toString(), arg.path);
+            return status;
         }
         return {ok: true};
       } catch (err) {

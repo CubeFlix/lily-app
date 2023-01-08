@@ -1,5 +1,6 @@
 {
   "description": "The Lily client application",
+  "version": "1.0.0",
   "keywords": [
     "electron",
     "boilerplate",

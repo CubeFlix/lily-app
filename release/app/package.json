@@ -1,12 +1,12 @@
 {
-  "name": "electron-react-boilerplate",
-  "version": "4.6.0",
-  "description": "A foundation for scalable desktop apps",
+  "name": "lily-app",
+  "version": "1.0.0",
+  "description": "The Lily client application",
   "license": "MIT",
   "author": {
-    "name": "Electron React Boilerplate Maintainers",
-    "email": "electronreactboilerplate@gmail.com",
-    "url": "https://github.com/electron-react-boilerplate"
+    "name": "cubeflix",
+    "email": "kevin.signal@gmail.com",
+    "url": "https://github.com/cubeflix"
   },
   "main": "./dist/main/main.js",
   "scripts": {
